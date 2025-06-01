@@ -1,5 +1,11 @@
 {
+  "name": "dtr.zkteco.api",
+  "version": "1.0.1",
+  "description": "Node.js API to stream ZKTeco attendance logs via Redis Pub/Sub and Socket.IO",
   "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "dotenv": "^16.5.0",
     "events": "^3.3.0",
