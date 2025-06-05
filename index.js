@@ -1,5 +1,4 @@
 /**
- * index.js
  *
  * Streams attendance logs from a ZKTeco biometric device into Redis Pub/Sub and
  * broadcasts them over Socket.IO. Designed to run continuously—even if the device
@@ -29,6 +28,7 @@ import { EventEmitter }  from 'events';
 import msgpack           from 'notepack.io';
 import Zkteco            from 'zkteco-js';
 import express           from 'express';
+import cors              from 'cors';
 import http              from 'http';
 import { Server }        from 'socket.io';
 
@@ -365,9 +365,27 @@ async function publishAttendances() {
 
   // Step 4: Set up Express + Socket.IO
   const app = express();
+  app.use(cors({
+    origin: CLIENT_ORIGIN,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'ngrok-skip-browser-warning'
+    ]
+  }));
+
   const httpServer = http.createServer(app);
   const io = new Server(httpServer, {
-    cors:       { origin: CLIENT_ORIGIN, methods: ['GET', 'POST'] },
+    cors: { 
+      origin: CLIENT_ORIGIN,
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'ngrok-skip-browser-warning'
+      ]
+    },
     transports: ['websocket'],
   });
 
