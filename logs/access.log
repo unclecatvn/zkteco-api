@@ -1,0 +1,9 @@
+{"timestamp":"2025-07-17T16:31:30.434Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/api/v1/bio-sync","statusCode":204,"responseTime":"1ms","referer":"direct","contentLength":0}
+{"timestamp":"2025-07-17T16:31:36.435Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/api/v1/bio-sync","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"542"}
+{"timestamp":"2025-07-17T16:31:46.423Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/api/v1/bio-sync","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"542"}
+{"timestamp":"2025-07-17T16:31:51.737Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/register","statusCode":200,"responseTime":"3ms","referer":"direct","contentLength":"2"}
+{"timestamp":"2025-07-17T16:31:52.679Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/register","statusCode":200,"responseTime":"2ms","referer":"direct","contentLength":"2"}
+{"timestamp":"2025-07-17T16:31:58.004Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/getrequest","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"0"}
+{"timestamp":"2025-07-17T16:31:59.336Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/getrequest","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"0"}
+{"timestamp":"2025-07-17T16:31:59.970Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/getrequest","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"0"}
+{"timestamp":"2025-07-17T16:32:00.621Z","ip":"::1","userAgent":"PostmanRuntime/7.44.1","method":"GET","url":"/iclock/getrequest","statusCode":200,"responseTime":"0ms","referer":"direct","contentLength":"0"}

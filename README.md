@@ -1,177 +1,126 @@
-# **DTR ZKteco Attendance API Server**
+# ZKTeco Device API Server
 
-A **Node.js** API server and real-time Socket.IO service that streams attendance data from a ZKTeco device. Attendance snapshots are fetched on a schedule, published via Redis Pub/Sub, and exposed over REST and WebSocket endpoints. Easily test or demo your setup with built-in Ngrok integration.
-
-## Table of Contents
-
-1. [Features](#features)
-2. [Prerequisites](#prerequisites)
-3. [Configuration](#configuration)
-4. [Installation](#installation)
-5. [Running the Server](#running-the-server)
-6. [Exposing with Ngrok](#exposing-with-ngrok)
-7. [API Usage](#api-usage)
-
-   * [REST Endpoint](#rest-endpoint)
-   * [Socket.IO](#socketio)
-8. [Deployment (Windows)](#deployment-windows)
-9. [Security & Best Practices](#security--best-practices)
-10. [License](#license)
+Streams attendance logs from a ZKTeco biometric device into Redis Pub/Sub and broadcasts them over Socket.IO.
 
 ## Features
 
-* **REST API**: `GET /api/v1/bio-sync` returns the latest attendance snapshot as JSON.
-* **Real-time updates**: `Socket.IO` stream uses MsgPack to push incremental attendance events to clients.
-* **Redis Pub/Sub**: Decouple data capture from client distribution; in-memory fallback when Redis is unavailable.
-* **Ngrok Integration**: Quickly expose your local server over HTTPS for remote testing or demos.
+- **Biometric Device Integration**: Connects to ZKTeco devices via TCP
+- **Real-time Data Streaming**: Redis Pub/Sub and Socket.IO support
+- **Automatic Reconnection**: Handles device disconnections gracefully
+- **Website Access Logging**: Tracks all website visits and provides analytics
+- **iClock Protocol Support**: Supports ZKTeco Cloud Server push protocol
 
-## Prerequisites
+## Website Access Logging
 
-* **Node.js** v22
-* **npm** or **Yarn**
-* **ZKTeco** biometric device on your network
-* **Redis** instance (host, port, credentials)
-* **Ngrok** account (for public tunneling)
+Hệ thống tự động ghi log tất cả các truy cập vào website của bạn với các thông tin:
 
-## Configuration
+- **Timestamp**: Thời gian truy cập
+- **IP Address**: Địa chỉ IP người truy cập
+- **User Agent**: Trình duyệt và hệ điều hành
+- **Method**: HTTP method (GET, POST, etc.)
+- **URL**: Đường dẫn được truy cập
+- **Status Code**: Mã trạng thái HTTP
+- **Response Time**: Thời gian phản hồi
+- **Referer**: Trang trước đó (nếu có)
 
-1. Copy the `.env.example` to `.env` in the project root.
-2. Update variables in `.env` as needed (ensure `.env` is in `.gitignore`):
+### Endpoints để xem log truy cập:
 
-```ini
-# Redis
-REDIS_HOST=your.redis.host
-REDIS_PORT=6379
-REDIS_USERNAME=default
-REDIS_PASSWORD=your_redis_password
-REDIS_CHANNEL=attendance:updates
+#### 1. Xem log truy cập chi tiết
 
-# ZKTeco Device
-DEVICE_IP=192.168.1.201  # ZKTeco device IP address
-DEVICE_PORT=4370
-SEND_TIMEOUT=20000  # in milliseconds
-RECV_TIMEOUT=20000  # in milliseconds
-
-# Server
-SERVER_PORT=8090
-CLIENT_ORIGIN=http://localhost:3000  # frontend URL for CORS
 ```
+GET /api/v1/access-logs
+```
+
+Trả về 100 log truy cập gần nhất với format:
+
+```json
+{
+  "logs": [
+    {
+      "timestamp": "2024-01-01T10:30:00.000Z",
+      "ip": "192.168.1.100",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "method": "GET",
+      "url": "/api/v1/bio-sync",
+      "statusCode": 200,
+      "responseTime": "25ms",
+      "referer": "direct",
+      "contentLength": 1024
+    }
+  ],
+  "total": 100
+}
+```
+
+#### 2. Xem thống kê truy cập
+
+```
+GET /api/v1/access-stats
+```
+
+Trả về thống kê tổng quan:
+
+```json
+{
+  "totalRequests": 1250,
+  "uniqueIPs": 45,
+  "todayRequests": 120,
+  "today": "2024-01-01",
+  "topPages": [
+    { "url": "/api/v1/bio-sync", "count": 500 },
+    { "url": "/iclock/register", "count": 200 }
+  ],
+  "topIPs": [
+    { "ip": "192.168.1.100", "count": 150 },
+    { "ip": "192.168.1.101", "count": 100 }
+  ]
+}
+```
+
+### Log Files
+
+Tất cả log truy cập được lưu vào file `logs/access.log` với format JSON, mỗi dòng là một log entry.
 
 ## Installation
 
-```bash
-# Clone repository
-git clone https://github.com/itechxcellence/dtr.zkteco.api.git
-cd dtr.zkteco.api
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Create `.env` file with your configuration
+4. Run: `npm start`
 
-# Install dependencies
-npm install
-# or
-yarn install
+## Environment Variables
+
+```env
+# Redis Configuration
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_USERNAME=default
+REDIS_PASSWORD=
+REDIS_CHANNEL=attendance:updates
+
+# ZKTeco Device Configuration
+DEVICE_IP=192.168.1.1
+DEVICE_PORT=4370
+SEND_TIMEOUT=20000
+RECV_TIMEOUT=20000
+
+# Server Configuration
+SERVER_PORT=8090
+CLIENT_ORIGIN=http://localhost:3000
 ```
 
-## Running the Server
+## API Endpoints
 
-1. Ensure Redis is running and accessible per `.env` settings.
-2. Confirm your ZKTeco device is configured and reachable.
-3. Start the API server:
+- `GET /api/v1/bio-sync` - Get latest biometric data
+- `GET /api/v1/access-logs` - Get website access logs
+- `GET /api/v1/access-stats` - Get access statistics
+- `GET /iclock/register` - Device registration (iClock protocol)
+- `POST /iclock/cdata` - Attendance data push (iClock protocol)
+- `GET /iclock/getrequest` - Get pending commands (iClock protocol)
 
-   ```bash
-   node index.js
-   ```
+## Socket.IO
 
-The server listens on `localhost:${SERVER_PORT}` by default.
+WebSocket endpoint for real-time attendance updates:
 
-## Exposing with Ngrok
-
-1. Install and authenticate Ngrok.
-2. Run:
-
-   ```bash
-   ngrok http ${SERVER_PORT}
-   ```
-3. Use the generated public HTTPS URL for both REST and Socket.IO clients.
-
-## API Usage
-
-### REST Endpoint
-
-* **URL**: `GET /api/v1/bio-sync`
-* **Response**: JSON array of the latest attendance records.
-
-```bash
-curl https://<ngrok-id>.ngrok.app/api/v1/bio-sync
-```
-
-### Socket.IO
-
-Clients can subscribe to live updates:
-
-```js
-import { Server } from 'socket.io';
-import msgpack from 'msgpack-lite';
-
-const io = new Server(server, {
-   cors:       { origin: CLIENT_ORIGIN, methods: ['GET','POST'] },
-   transports: ['websocket'],
-});
-
-// Socket.IO connection handling
-io.on('connection', socket => {
-   console.log(`Client connected: ${socket.id}`);
-   if (last_payload_obj) {
-   socket.emit('attendance', msgpack.encode(last_payload_obj));
-   }
-   const message_handler = (_ch, msg) => {
-   socket.emit('attendance', msg);
-   };
-   sub_client.on(REDIS_CHANNEL, message_handler);
-
-   socket.on('disconnect', () => {
-   sub_client.off(REDIS_CHANNEL, message_handler);
-   });
-});
-```
-
-## Deployment (Windows)
-
-Use **Task Scheduler** or **NSSM** to run the server and Ngrok on boot:
-
-1. **Ngrok config** (`%USERPROFILE%\AppData\Local\ngrok\ngrok.yml`):
-
-   ```yaml
-   version: "3"
-    agent:
-        authtoken: YOUR_NGROK_AUTHTOKEN
-        crl_noverify: true # For Development only!
-        update_check: false # For Development only!
-    tunnels:
-    attendance:
-        proto: http
-        addr: ${SERVER_PORT}
-        basic_auth:
-        - "user:password"
-   ```
-
-2. Create Windows services for both `node index.js` and Ngrok executable.
-
-## Security & Best Practices
-
-* **.env**: Keep out of source control (`.gitignore`) and restrict to `chmod 600` on Linux/macOS.
-* **HTTPS**: Always use the Ngrok HTTPS URL or your own SSL setup in production.
-* **Credentials Rotation**: Rotate Redis and Ngrok tokens periodically.
-* **Access Control**: Protect endpoints via CORS, Basic Auth, or API keys.
-
-## Contributing & Feedback
-
-We welcome suggestions, feature requests, and improvements! Please use one of the following channels:
-
-* **Issues & Pull Requests**: Open or comment on issues at [https://github.com/itechxcellence/dtr.zkteco.api/issues](https://github.com/itechxcellence/dtr.zkteco.api/issues)
-* **Email**: Send suggestions/discussions to [ronzape@ronhedwigzape.com](mailto:ronzape@ronhedwigzape.com)
-
-Feel free to fork the repo, make changes, and submit a pull request.
-
-## License
-
-MIT © ItechXcellence
-
+- Event: `attendance`
+- Data: MessagePack encoded attendance data
